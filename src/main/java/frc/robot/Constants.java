@@ -34,6 +34,14 @@ public final class Constants {
 
   }
 
+  public static class ArmConstants {
+
+    public static final int shoulderMotorID = 15;
+    public static final int intakeMotorID = 16;
+    public static final int wristMotorID = 17;
+
+}
+
   public static class VisionConstants {
 
     /**
