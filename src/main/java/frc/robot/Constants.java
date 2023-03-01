@@ -50,13 +50,16 @@ public final class Constants {
     public static final Transform3d CAMERA_TO_ROBOT =
         new Transform3d(new Translation3d(-0.3425, 0.0, -0.233), new Rotation3d());
     public static final Transform3d ROBOT_TO_CAMERA = CAMERA_TO_ROBOT.inverse();
+
+    public static final double FIELD_LENGTH_METERS = 16.54175;
+    public static final double FIELD_WIDTH_METERS = 8.0137;
   }
 
   public static final class Auton
   {
 
-    public static final PIDFConfig xAutoPID     = new PIDFConfig(0.7, 0, 0);
-    public static final PIDFConfig yAutoPID     = new PIDFConfig(0.7, 0, 0);
+    public static final PIDFConfig xAutoPID     = new PIDFConfig(0.7, 0, 0.0);
+    public static final PIDFConfig yAutoPID     = new PIDFConfig(0.7, 0, 0.0);
     public static final PIDFConfig angleAutoPID = new PIDFConfig(0.4, 0, 0.01);
 
     public static final double MAX_SPEED        = 4;

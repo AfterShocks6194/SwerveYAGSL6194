@@ -19,6 +19,7 @@ import swervelib.math.SwerveKinematics2;
 import swervelib.parser.SwerveControllerConfiguration;
 import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
+import swervelib.telemetry.SwerveDriveTelemetry;
 
 public class SwerveSubsystem extends SubsystemBase
 {
@@ -108,6 +109,7 @@ public class SwerveSubsystem extends SubsystemBase
     swerveDrive.resetOdometry(initialHolonomicPose);
   }
 
+
   /**
    * Gets the current pose (position and rotation) of the robot, as reported by odometry.
    *
@@ -115,7 +117,8 @@ public class SwerveSubsystem extends SubsystemBase
    */
   public Pose2d getPose()
   {
-    return swerveDrive.getPose();
+    // return poseEstimator.getCurrentPose();
+  return swerveDrive.getPose();
   }
 
   /**
@@ -245,10 +248,6 @@ public class SwerveSubsystem extends SubsystemBase
 public SwerveModulePosition[] getModulePositions(){
   return swerveDrive.getModulePositions();
 }
-
-
-
-
   /**
    * Add a fake vision reading for testing purposes.
    */
@@ -256,4 +255,7 @@ public SwerveModulePosition[] getModulePositions(){
   {
     swerveDrive.addVisionMeasurement(new Pose2d(3, 3, Rotation2d.fromDegrees(65)), Timer.getFPGATimestamp(), true, .5);
   }
+
+
+
 }

@@ -30,7 +30,7 @@ public final class Autos {
   /**
    * April Tag field layout.
    */
-  private static AprilTagFieldLayout aprilTagField = null;
+  // private static AprilTagFieldLayout aprilTagField = null;
 
   private Autos() {
     throw new UnsupportedOperationException("This is a utility class!");
@@ -45,7 +45,7 @@ public final class Autos {
    * Example static factory for an autonomous command.
    */
   public static CommandBase exampleAuto(SwerveSubsystem swerve) {
-    boolean onTheFly = true; // Use the path defined in code or loaded from PathPlanner.
+    boolean onTheFly = false; // Use the path defined in code or loaded from PathPlanner.
     PathPlannerTrajectory example;
     if (onTheFly) {
       // Simple path with holonomic rotation. Stationary start/end. Max velocity of 4
@@ -60,7 +60,7 @@ public final class Autos {
       // position, heading(direction of travel), holonomic rotation
       );
     } else {
-      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup("SamplePath", new PathConstraints(4, 3));
+      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup("Two Piece Auto", new PathConstraints(4, 3));
       // This is just an example event map. It would be better to have a constant,
       // global event map
       // in your code that will be used by all path following commands.
@@ -94,38 +94,38 @@ public final class Autos {
       );
       return Commands.sequence(autoBuilder.fullAuto(example1));
     }
-    // swerve.postTrajectory(example);
+    swerve.postTrajectory(example);
     return Commands.sequence(new FollowTrajectory(swerve, example, true));
   }
 
-  /**
-   * Create a {@link FollowTrajectory} command to go to the April Tag from the
-   * current position.
-   *
-   * @param swerve            Swerve drive subsystem.
-   * @param id                April Tag ID to go to.
-   * @param rotation          Rotation to go to.
-   * @param holonomicRotation Holonomic rotation to be at.
-   * @param offset            Offset from the April Tag.
-   * @return {@link FollowTrajectory} command. May return null if cannot load
-   *         field.
-   */
-  public static CommandBase driveToAprilTag(SwerveSubsystem swerve, int id, Rotation2d rotation,
-      Rotation2d holonomicRotation, Translation2d offset) {
-    if (aprilTagField == null) {
-      try {
-        aprilTagField = new AprilTagFieldLayout(
-            Filesystem.getDeployDirectory() + "/apriltags/2023-chargedup.json");
-      } catch (Exception ignored) {
-        return null;
-      }
-    }
-    PathPlannerTrajectory path = PathPlanner.generatePath(new PathConstraints(4, 3), false,
-        PathPoint.fromCurrentHolonomicState(swerve.getPose(),
-            swerve.getRobotVelocity()),
-        new PathPoint(aprilTagField.getTagPose(id).get().getTranslation()
-            .toTranslation2d().plus(offset),
-            rotation, holonomicRotation));
-    return Commands.sequence(new FollowTrajectory(swerve, path, true));
-  }
+  // /**
+  //  * Create a {@link FollowTrajectory} command to go to the April Tag from the
+  //  * current position.
+  //  *
+  //  * @param swerve            Swerve drive subsystem.
+  //  * @param id                April Tag ID to go to.
+  //  * @param rotation          Rotation to go to.
+  //  * @param holonomicRotation Holonomic rotation to be at.
+  //  * @param offset            Offset from the April Tag.
+  //  * @return {@link FollowTrajectory} command. May return null if cannot load
+  //  *         field.
+  //  */
+  // public static CommandBase driveToAprilTag(SwerveSubsystem swerve, int id, Rotation2d rotation,
+  //     Rotation2d holonomicRotation, Translation2d offset) {
+  //   if (aprilTagField == null) {
+  //     try {
+  //       aprilTagField = new AprilTagFieldLayout(
+  //           Filesystem.getDeployDirectory() + "/apriltags/2023-chargedup.json");
+  //     } catch (Exception ignored) {
+  //       return null;
+  //     }
+  //   }
+  //   PathPlannerTrajectory path = PathPlanner.generatePath(new PathConstraints(4, 3), false,
+  //       PathPoint.fromCurrentHolonomicState(swerve.getPose(),swerve.getRobotVelocity()),
+  //       new PathPoint(aprilTagField.getTagPose(id).get().getTranslation()
+  //           .toTranslation2d().plus(offset),
+  //           rotation, holonomicRotation));
+  //           swerve.postTrajectory(path);
+  //   return Commands.sequence(new FollowTrajectory(swerve, path, true));
+  // }
 }

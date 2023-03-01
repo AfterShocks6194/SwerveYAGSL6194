@@ -1,7 +1,7 @@
 {
   "location": {
-    "x": 9.875,
-    "y": -14.875
+    "x": 14.875,
+    "y": -9.875
   },
   "absoluteEncoderOffset": 339.8,
   "drive": {
@@ -16,7 +16,7 @@
   },
   "inverted": {
     "angle": true,
-    "drive": false
+    "drive": true
   },
   "encoder": {
     "type": "cancoder",
