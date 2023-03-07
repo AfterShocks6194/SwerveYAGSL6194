@@ -10,10 +10,11 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
+// import edu.wpi.first.apriltag.AprilTagFieldLayout;
+// import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.Filesystem;
+// import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -24,6 +25,7 @@ import frc.robot.Constants.Auton;
 import frc.robot.subsystems.SwerveSubsystem;
 import java.util.HashMap;
 import java.util.List;
+import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 public final class Autos {
 
@@ -44,7 +46,7 @@ public final class Autos {
   /**
    * Example static factory for an autonomous command.
    */
-  public static CommandBase exampleAuto(SwerveSubsystem swerve) {
+  public static CommandBase exampleAuto(SwerveSubsystem swerve, PoseEstimatorSubsystem poser, String ChosenPath) {
     boolean onTheFly = false; // Use the path defined in code or loaded from PathPlanner.
     PathPlannerTrajectory example;
     if (onTheFly) {
@@ -60,7 +62,7 @@ public final class Autos {
       // position, heading(direction of travel), holonomic rotation
       );
     } else {
-      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup("Two Piece Auto", new PathConstraints(4, 3));
+      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup(ChosenPath, new PathConstraints(4, 3));
       // This is just an example event map. It would be better to have a constant,
       // global event map
       // in your code that will be used by all path following commands.
@@ -73,6 +75,7 @@ public final class Autos {
       // along with your subsystems.
       SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
           swerve::getPose,
+          // poser::getCurrentPose,
           // Pose2d supplier
           swerve::resetOdometry,
           // Pose2d consumer, used to reset odometry at the beginning of auto
@@ -95,7 +98,7 @@ public final class Autos {
       return Commands.sequence(autoBuilder.fullAuto(example1));
     }
     swerve.postTrajectory(example);
-    return Commands.sequence(new FollowTrajectory(swerve, example, true));
+    return Commands.sequence(new FollowTrajectory(swerve, example, true, poser));
   }
 
   // /**

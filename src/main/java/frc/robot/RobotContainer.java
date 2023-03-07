@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -12,6 +13,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -55,6 +59,8 @@ public class RobotContainer {
   private final Arm arm = new Arm();
   private final PhotonCamera photonCamera = new PhotonCamera("photonCamera");
   
+  private static final SendableChooser<String> AutoPath = new SendableChooser<>();
+
   
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
@@ -63,7 +69,7 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   CommandJoystick driverController = new CommandJoystick(1);
 
-  private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(photonCamera, drivebase);
+  private final PoseEstimatorSubsystem poser = new PoseEstimatorSubsystem(photonCamera, drivebase);
 
   // CommandJoystick driverController = new
   // CommandJoystick(3);//(OperatorConstants.DRIVER_CONTROLLER_PORT);
@@ -72,46 +78,61 @@ public class RobotContainer {
   private static AprilTagFieldLayout aprilTagField = null;
 
   /* Driver Buttons */
-  private final JoystickButton zeroGyro = new JoystickButton(driverXbox, XboxController.Button.kStart.value);
-  private final JoystickButton robotCentric = new JoystickButton(driverXbox, XboxController.Button.kBack.value);
-  private final JoystickButton getGamepiece = new JoystickButton(driverXbox, XboxController.Button.kY.value);
-  private final JoystickButton goScore = new JoystickButton(driverXbox, XboxController.Button.kX.value);
-  private final JoystickButton extendArm = new JoystickButton(driverXbox, XboxController.Button.kA.value);
-  private final JoystickButton intakeIn = new JoystickButton(driverXbox, XboxController.Button.kLeftBumper.value);
-  private final JoystickButton intakeOut = new JoystickButton(driverXbox, XboxController.Button.kRightBumper.value);
-  private final JoystickButton auto = new JoystickButton(driverXbox, XboxController.Button.kB.value);
+  private final JoystickButton StartButton = new JoystickButton(driverXbox, XboxController.Button.kStart.value);
+  private final JoystickButton BackButton = new JoystickButton(driverXbox, XboxController.Button.kBack.value);
+  private final JoystickButton YButton = new JoystickButton(driverXbox, XboxController.Button.kY.value);
+  private final JoystickButton XButton = new JoystickButton(driverXbox, XboxController.Button.kX.value);
+  private final JoystickButton AButton = new JoystickButton(driverXbox, XboxController.Button.kA.value);
+  private final JoystickButton LeftBumper = new JoystickButton(driverXbox, XboxController.Button.kLeftBumper.value);
+  private final JoystickButton RightBumper = new JoystickButton(driverXbox, XboxController.Button.kRightBumper.value);
+  private final JoystickButton BButton = new JoystickButton(driverXbox, XboxController.Button.kB.value);
 
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-
     // Configure the trigger bindings
     configureBindings();
+    poser.addDashboardWidgets(Shuffleboard.getTab("Vision"));
 
-    AbsoluteDrive closedAbsoluteDrive = new AbsoluteDrive(drivebase,
-        // Applies deadbands and inverts controls because joysticks
-        // are back-right positive while robot
-        // controls are front-left positive
-        () -> (Math.abs(driverXbox.getLeftY()) > OperatorConstants.LEFT_Y_DEADBAND)
-            ? driverXbox.getLeftY()
-            : 0,
-        () -> (Math.abs(driverXbox.getLeftX()) > OperatorConstants.LEFT_X_DEADBAND)
-            ? driverXbox.getLeftX()
-            : 0,
-        () -> -driverXbox.getRightX(),
-        () -> -driverXbox.getRightY(),
-        false);
+    AutoPath.setDefaultOption("Two Piece Blue NB", "Two Piece Blue NB");
+    AutoPath.addOption("Two Piece Red NB", "Two Piece Red NB");
 
-    AbsoluteFieldDrive closedFieldAbsoluteDrive = new AbsoluteFieldDrive(drivebase,
-        () -> (Math.abs(driverXbox.getLeftY()) > OperatorConstants.LEFT_Y_DEADBAND)
-            ? -driverXbox.getLeftY()
-            : 0,
-        () -> (Math.abs(driverXbox.getLeftX()) > OperatorConstants.LEFT_X_DEADBAND)
-            ? -driverXbox.getLeftX()
-            : 0,
-        () -> -driverXbox.getRawAxis(4), false);
+    AutoPath.addOption("Two Piece Red Balance", "Two Piece Red Balance");
+    AutoPath.addOption("Two Piece Blue Balance", "Two Piece Blue Balance");
+
+    AutoPath.addOption("Middle Blue", "Middle Blue");
+    AutoPath.addOption("Middle Red", "Middle Red");
+
+    AutoPath.addOption("Blue Right", "Blue Right");
+    AutoPath.addOption("Red Left Balance", "Red Left Balance");
+
+    SmartDashboard.putData("Auto Pathing", AutoPath);
+
+
+    // AbsoluteDrive closedAbsoluteDrive = new AbsoluteDrive(drivebase,
+    //     // Applies deadbands and inverts controls because joysticks
+    //     // are back-right positive while robot
+    //     // controls are front-left positive
+    //     () -> (Math.abs(driverXbox.getLeftY()) > OperatorConstants.LEFT_Y_DEADBAND)
+    //         ? driverXbox.getLeftY()
+    //         : 0,
+    //     () -> (Math.abs(driverXbox.getLeftX()) > OperatorConstants.LEFT_X_DEADBAND)
+    //         ? driverXbox.getLeftX()
+    //         : 0,
+    //     () -> -driverXbox.getRightX(),
+    //     () -> -driverXbox.getRightY(),
+    //     false);
+
+    // AbsoluteFieldDrive closedFieldAbsoluteDrive = new AbsoluteFieldDrive(drivebase,
+    //     () -> (Math.abs(driverXbox.getLeftY()) > OperatorConstants.LEFT_Y_DEADBAND)
+    //         ? -driverXbox.getLeftY()
+    //         : 0,
+    //     () -> (Math.abs(driverXbox.getLeftX()) > OperatorConstants.LEFT_X_DEADBAND)
+    //         ? -driverXbox.getLeftX()
+    //         : 0,
+    //     () -> -driverXbox.getRawAxis(4), false);
     // TeleopDrive closedFieldRel = new TeleopDrive(
     //     drivebase,
     //     () -> (Math.abs(driverController.getY()) > OperatorConstants.LEFT_Y_DEADBAND) ? driverController.getY() : 0,
@@ -120,12 +141,12 @@ public class RobotContainer {
 
     TeleopDrive closedFieldRel = new TeleopDrive(
         drivebase,
-        () -> (Math.abs(driverXbox.getLeftY()) > OperatorConstants.LEFT_Y_DEADBAND) ? driverXbox.getLeftY() : 0,
-        () -> (Math.abs(driverXbox.getLeftX()) > OperatorConstants.LEFT_X_DEADBAND) ? driverXbox.getLeftX() : 0,
-        () -> driverXbox.getRawAxis(4), () -> true, false);
+        () -> (Math.abs(driverXbox.getLeftY()) > OperatorConstants.LEFT_Y_DEADBAND) ? -driverXbox.getLeftY() : 0,
+        () -> (Math.abs(driverXbox.getLeftX()) > OperatorConstants.LEFT_X_DEADBAND) ? -driverXbox.getLeftX() : 0,
+        () -> -driverXbox.getRawAxis(4), () -> true, false);
 
     // drivebase.setDefaultCommand(!RobotBase.isSimulation() ? closedAbsoluteDrive : closedFieldAbsoluteDrive);
-      drivebase.setDefaultCommand(closedFieldAbsoluteDrive);
+      drivebase.setDefaultCommand(closedFieldRel);
   }
 
   /**
@@ -143,26 +164,36 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    Command extendArmCommand = new RunCommand(() -> arm.setArmPosition(125, 75), arm);
+    Command extendArmCommand = new RunCommand(() -> arm.setArmPosition(117, 75), arm);
+    // Command extendArmCommand = new RunCommand(() -> arm.setArmPosition(10, 15), arm);
+
     Command retractArmCommand = new RunCommand(() -> arm.setArmPosition(0, 0), arm);
-    Command collectgamepiececommand = new RunCommand(() -> arm.setArmPosition(47, 75), arm);
-    Command cubeModeEngage = new RunCommand(() -> arm.setArmPosition(47, 15), arm);
+    Command collectgamepiececommand = new RunCommand(() -> arm.setArmPosition(50, 70), arm);
     Command IntakeInwards = new RunCommand(() -> arm.setIntakeSpeed(.5));
     Command IntakeOutwards = new RunCommand(() -> arm.setIntakeSpeed(-.5));
+
+    Command cubeModeEngage = new RunCommand(() -> arm.setArmPosition(35, 245), arm);
+    Command cubeModeScore = new RunCommand(() -> arm.setArmPosition(87, 210), arm);
 
 
     
 
     /* Driver Buttons */
-    zeroGyro.onTrue((new InstantCommand(drivebase::zeroGyro)));
-    getGamepiece.onTrue(collectgamepiececommand);
-    goScore.onTrue(cubeModeEngage);
-    intakeIn.whileTrue(IntakeInwards);
-    intakeOut.whileTrue(IntakeOutwards);
+    StartButton.onTrue((new InstantCommand(drivebase::zeroGyro)));
+    YButton.onTrue(collectgamepiececommand);
+
+
+    XButton.onTrue(cubeModeEngage);
+    BButton.onTrue(cubeModeScore);
+    
+    LeftBumper.whileTrue(IntakeInwards);
+    RightBumper.whileTrue(IntakeOutwards);
     // absolute.onTrue(new InstantCommand(() -> s_Swerve.resetAngles()));
 
-    extendArm.onTrue(extendArmCommand);
-    extendArm.onFalse(retractArmCommand);
+    AButton.onTrue(extendArmCommand);
+    AButton.onFalse(retractArmCommand);
+
+
 
     // auto.onTrue(driveToAprilTag(drivebase, 4, Rotation2d.fromDegrees(0),
     //     Rotation2d.fromDegrees(0), new Translation2d(Units.inchesToMeters(-36), 0)));
@@ -200,7 +231,7 @@ public class RobotContainer {
     reachout.withTimeout(2.25),
     poopItOut.withTimeout(.5),
     stopPoopin.withTimeout(0),
-    retractArmCommand.alongWith(Autos.exampleAuto(drivebase))
+    retractArmCommand.alongWith(Autos.exampleAuto(drivebase, poser, AutoPath.getSelected()))
     );
   }
 
@@ -237,13 +268,13 @@ public class RobotContainer {
       }
     }
     PathPlannerTrajectory path = PathPlanner.generatePath(new PathConstraints(4, 3), false,
-        PathPoint.fromCurrentHolonomicState(swerve.getPose(),swerve.getRobotVelocity()),
+        PathPoint.fromCurrentHolonomicState(poser.getCurrentPose(),swerve.getRobotVelocity()),
         new PathPoint(new Translation2d(10,7), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)),
         new PathPoint(aprilTagField.getTagPose(id).get().getTranslation()
             .toTranslation2d().plus(offset),
             rotation, holonomicRotation));
             // swerve.postTrajectory(path);
-    return Commands.sequence(new FollowTrajectory(swerve, path, false));
+    return Commands.sequence(new FollowTrajectory(swerve, path, false, poser));
   }
 
 
@@ -259,13 +290,13 @@ public class RobotContainer {
     }
 
     PathPlannerTrajectory path = PathPlanner.generatePath(new PathConstraints(4, 3), false,
-        PathPoint.fromCurrentHolonomicState(swerve.getPose(),swerve.getRobotVelocity()),
+        PathPoint.fromCurrentHolonomicState(poser.getCurrentPose(),swerve.getRobotVelocity()),
         new PathPoint(new Translation2d(10,7), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)),
                 new PathPoint(aprilTagField.getTagPose(id).get().getTranslation()
             .toTranslation2d().plus(offset),
             Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)));
             // swerve.postTrajectory(path);
-    return Commands.sequence(new FollowTrajectory(swerve, path, false),
+    return Commands.sequence(new FollowTrajectory(swerve, path, false, poser),
     new RunCommand(() -> arm.setIntakeSpeed(-.5)),
     new RunCommand(() -> arm.setArmPosition(47, 75), arm));
   }

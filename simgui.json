@@ -26,10 +26,17 @@
       "/LiveWindow/Ungrouped/PIDController[8]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[9]": "PIDController",
       "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
+      "/Shuffleboard/Vision/Field": "Field2d",
+      "/SmartDashboard/Auto Pathing": "String Chooser",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/navX-Sensor[1]": "Gyro"
     },
     "windows": {
+      "/SmartDashboard/Auto Pathing": {
+        "window": {
+          "visible": true
+        }
+      },
       "/SmartDashboard/Field": {
         "window": {
           "visible": true

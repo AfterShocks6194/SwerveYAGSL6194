@@ -13,6 +13,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
+
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveKinematics2;
@@ -21,6 +22,7 @@ import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 
+
 public class SwerveSubsystem extends SubsystemBase
 {
 
@@ -28,6 +30,7 @@ public class SwerveSubsystem extends SubsystemBase
    * Swerve drive object.
    */
   private final SwerveDrive swerveDrive;
+
 
   /**
    * Initialize {@link SwerveDrive} with the directory provided.
@@ -43,6 +46,9 @@ public class SwerveSubsystem extends SubsystemBase
     {
       throw new RuntimeException(e);
     }
+    
+    
+  
   }
 
   /**
@@ -54,7 +60,7 @@ public class SwerveSubsystem extends SubsystemBase
   public SwerveSubsystem(SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg)
   {
     swerveDrive = new SwerveDrive(driveCfg, controllerCfg);
-  }
+ }
 
   /**
    * The primary method for controlling the drivebase.  Takes a {@link Translation2d} and a rotation rate, and
@@ -79,6 +85,7 @@ public class SwerveSubsystem extends SubsystemBase
   @Override
   public void periodic()
   {
+    
     swerveDrive.updateOdometry();
   }
 
@@ -256,6 +263,10 @@ public SwerveModulePosition[] getModulePositions(){
     swerveDrive.addVisionMeasurement(new Pose2d(3, 3, Rotation2d.fromDegrees(65)), Timer.getFPGATimestamp(), true, .5);
   }
 
+  public void addVisionMeasurement(Pose2d robotPose, double timestamp, boolean soft, double trustWorthiness){
+    swerveDrive.addVisionMeasurement(robotPose, Timer.getFPGATimestamp(), true, .5);
+
+  }
 
 
 }
