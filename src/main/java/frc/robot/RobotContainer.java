@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -32,8 +33,6 @@ import frc.robot.commands.drivebase.AbsoluteFieldDrive;
 import frc.robot.commands.drivebase.TeleopDrive;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.PoseEstimatorSubsystem;
-
 import java.io.File;
 
 import org.photonvision.PhotonCamera;
@@ -57,7 +56,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 public class RobotContainer {
 
   private final Arm arm = new Arm();
-  private final PhotonCamera photonCamera = new PhotonCamera("photonCamera");
+  // private final PhotonCamera photonCamera = new PhotonCamera("photonCamera");
   
   private static final SendableChooser<String> AutoPath = new SendableChooser<>();
 
@@ -67,9 +66,9 @@ public class RobotContainer {
       "swerve/neo"));
   // CommandJoystick rotationController = new CommandJoystick(1);
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  CommandJoystick driverController = new CommandJoystick(1);
+  // CommandJoystick driverController = new CommandJoystick(1);
 
-  private final PoseEstimatorSubsystem poser = new PoseEstimatorSubsystem(photonCamera, drivebase);
+  // private final PoseEstimatorSubsystem poser = new PoseEstimatorSubsystem(photonCamera, drivebase);
 
   // CommandJoystick driverController = new
   // CommandJoystick(3);//(OperatorConstants.DRIVER_CONTROLLER_PORT);
@@ -94,7 +93,7 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
-    poser.addDashboardWidgets(Shuffleboard.getTab("Vision"));
+    // poser.addDashboardWidgets(Shuffleboard.getTab("Vision"));
 
     AutoPath.setDefaultOption("Two Piece Blue NB", "Two Piece Blue NB");
     AutoPath.addOption("Two Piece Red NB", "Two Piece Red NB");
@@ -176,40 +175,58 @@ public class RobotContainer {
     Command cubeModeScore = new RunCommand(() -> arm.setArmPosition(87, 210), arm);
 
 
-    
-
     /* Driver Buttons */
     StartButton.onTrue((new InstantCommand(drivebase::zeroGyro)));
     YButton.onTrue(collectgamepiececommand);
-
 
     XButton.onTrue(cubeModeEngage);
     BButton.onTrue(cubeModeScore);
     
     LeftBumper.whileTrue(IntakeInwards);
     RightBumper.whileTrue(IntakeOutwards);
-    // absolute.onTrue(new InstantCommand(() -> s_Swerve.resetAngles()));
 
     AButton.onTrue(extendArmCommand);
     AButton.onFalse(retractArmCommand);
 
+    BackButton.whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock, drivebase)));
+
+    //Co-Driver Buttons on Dashboard
 
 
-    // auto.onTrue(driveToAprilTag(drivebase, 4, Rotation2d.fromDegrees(0),
-    //     Rotation2d.fromDegrees(0), new Translation2d(Units.inchesToMeters(-36), 0)));
+    // IT IS IMPORTANT THAT YOU SUBTRACT THE X OFFSET FROM TAGS 1, 2, 3, 4 AND ADD THE OFFSET TO 5, 6, 7, 8
+    SmartDashboard.putData("Drive to 1", driveToAprilTag(drivebase, 1, Rotation2d.fromDegrees(0),
+    Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
+
+    SmartDashboard.putData("Drive to 2", driveToAprilTag(drivebase, 2, Rotation2d.fromDegrees(0),
+    Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
+
+    SmartDashboard.putData("Drive to 3", driveToAprilTag(drivebase, 3, Rotation2d.fromDegrees(0),
+    Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
+
+    SmartDashboard.putData("Drive to 4", driveToAprilTag(drivebase, 4, Rotation2d.fromDegrees(0),
+    Rotation2d.fromDegrees(0), new Translation2d(-Constants.xOffset, (Units.inchesToMeters(0)))));
+
+    SmartDashboard.putData("Drive to 5", driveToAprilTag(drivebase, 5, Rotation2d.fromDegrees(180),
+    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+
+    SmartDashboard.putData("Drive to 6", driveToAprilTag(drivebase, 6, Rotation2d.fromDegrees(180),
+    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+
+    SmartDashboard.putData("Drive to 7", driveToAprilTag(drivebase, 7, Rotation2d.fromDegrees(180),
+    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+
+    SmartDashboard.putData("Drive to 8", driveToAprilTag(drivebase, 8, Rotation2d.fromDegrees(180),
+    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+ 
+
 
     // auto.onTrue(Commands.sequence(autoToConePickup(drivebase, 4, new Translation2d(Units.inchesToMeters(-36), 0)),
     // IntakeOutwards,collectgamepiececommand));
 
-
-    // new JoystickButton(driverXbox, 1).onTrue((new InstantCommand(drivebase::zeroGyro)));
     // new JoystickButton(driverXbox, 3).onTrue(new InstantCommand(drivebase::addFakeVisionReading));
-    // new JoystickButton(driverXbox, 3).whileTrue(new RepeatCommand(new
-    // InstantCommand(drivebase::lock, drivebase)));
     // new JoystickButton(driverXbox, 4).onTrue(driveToAprilTag(drivebase, 4, Rotation2d.fromDegrees(0),
     //     Rotation2d.fromDegrees(0), new Translation2d(Units.inchesToMeters(-36), 0)));
-    // new JoystickButton(driverXbox, 5).onTrue(driveToAprilTag(drivebase, 1, Rotation2d.fromDegrees(0),
-    //     Rotation2d.fromDegrees(180), new Translation2d(Units.inchesToMeters(-36), 0)));
+    // new JoystickButton(driverXbox, 5).onTrue();
 
   }
 
@@ -231,7 +248,7 @@ public class RobotContainer {
     reachout.withTimeout(2.25),
     poopItOut.withTimeout(.5),
     stopPoopin.withTimeout(0),
-    retractArmCommand.alongWith(Autos.exampleAuto(drivebase, poser, AutoPath.getSelected()))
+    retractArmCommand.alongWith(Autos.exampleAuto(drivebase, AutoPath.getSelected()))
     );
   }
 
@@ -257,7 +274,7 @@ public class RobotContainer {
    *         field.
    */
   public CommandBase driveToAprilTag(SwerveSubsystem swerve, int id, Rotation2d rotation,
-      Rotation2d holonomicRotation, Translation2d offset) {
+  Rotation2d holonomicRotation, Translation2d offset) {
         
     if (aprilTagField == null) {
       try {
@@ -268,13 +285,13 @@ public class RobotContainer {
       }
     }
     PathPlannerTrajectory path = PathPlanner.generatePath(new PathConstraints(4, 3), false,
-        PathPoint.fromCurrentHolonomicState(poser.getCurrentPose(),swerve.getRobotVelocity()),
-        new PathPoint(new Translation2d(10,7), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)),
+        PathPoint.fromCurrentHolonomicState(swerve.getPose(),swerve.getRobotVelocity()),
+        // new PathPoint(new Translation2d(10,7), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)),
         new PathPoint(aprilTagField.getTagPose(id).get().getTranslation()
             .toTranslation2d().plus(offset),
             rotation, holonomicRotation));
-            // swerve.postTrajectory(path);
-    return Commands.sequence(new FollowTrajectory(swerve, path, false, poser));
+            swerve.postTrajectory(path);
+    return Commands.sequence(new FollowTrajectory(swerve, path, false));
   }
 
 
@@ -290,13 +307,13 @@ public class RobotContainer {
     }
 
     PathPlannerTrajectory path = PathPlanner.generatePath(new PathConstraints(4, 3), false,
-        PathPoint.fromCurrentHolonomicState(poser.getCurrentPose(),swerve.getRobotVelocity()),
+        PathPoint.fromCurrentHolonomicState(swerve.getPose(),swerve.getRobotVelocity()),
         new PathPoint(new Translation2d(10,7), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)),
                 new PathPoint(aprilTagField.getTagPose(id).get().getTranslation()
             .toTranslation2d().plus(offset),
             Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)));
             // swerve.postTrajectory(path);
-    return Commands.sequence(new FollowTrajectory(swerve, path, false, poser),
+    return Commands.sequence(new FollowTrajectory(swerve, path, false),
     new RunCommand(() -> arm.setIntakeSpeed(-.5)),
     new RunCommand(() -> arm.setArmPosition(47, 75), arm));
   }
