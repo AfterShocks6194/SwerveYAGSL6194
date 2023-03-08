@@ -212,23 +212,23 @@ private void ShoulderTuner(){
    SmartDashboard.putNumber("Shoulder/Output", shoulder.getAppliedOutput());  
 }
 
-private void coDriverControlsSetup(){
-  SmartDashboard.putBoolean("CoDriver/Cone Mode", true);
-  SmartDashboard.putBoolean("CoDriver/Slomo Mode", false);
-  SmartDashboard.putNumber("CoDriver/Shoulder Pickup Angle", 47);
-  SmartDashboard.putNumber("CoDriver/Wrist Pickup Angle", 75);
+// private void coDriverControlsSetup(){
+//   SmartDashboard.putBoolean("CoDriver/Cone Mode", true);
+//   SmartDashboard.putBoolean("CoDriver/Slomo Mode", false);
+//   SmartDashboard.putNumber("CoDriver/Shoulder Pickup Angle", 47);
+//   SmartDashboard.putNumber("CoDriver/Wrist Pickup Angle", 75);
 
-}
+// }
 
-private void coDriverControls(){
-  SmartDashboard.getBoolean("CoDriver/Cone Mode", true);
-  SmartDashboard.getBoolean("CoDriver/Slomo Mode", false);
-  SmartDashboard.getNumber("CoDriver/Shoulder Pickup Angle", 47);
-  SmartDashboard.getNumber("CoDriver/Wrist Pickup Angle", 75);
+// private void coDriverControls(){
+//   SmartDashboard.getBoolean("CoDriver/Cone Mode", true);
+//   SmartDashboard.getBoolean("CoDriver/Slomo Mode", false);
+//   SmartDashboard.getNumber("CoDriver/Shoulder Pickup Angle", 47);
+//   SmartDashboard.getNumber("CoDriver/Wrist Pickup Angle", 75);
 
 
 
-}
+// }
 
 
 private void wristTunerSetup(){
