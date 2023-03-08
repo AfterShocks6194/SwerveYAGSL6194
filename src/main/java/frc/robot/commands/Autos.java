@@ -25,7 +25,7 @@ import frc.robot.Constants.Auton;
 import frc.robot.subsystems.SwerveSubsystem;
 import java.util.HashMap;
 import java.util.List;
-import frc.robot.subsystems.PoseEstimatorSubsystem;
+// import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 public final class Autos {
 
@@ -46,7 +46,7 @@ public final class Autos {
   /**
    * Example static factory for an autonomous command.
    */
-  public static CommandBase exampleAuto(SwerveSubsystem swerve, PoseEstimatorSubsystem poser, String ChosenPath) {
+  public static CommandBase exampleAuto(SwerveSubsystem swerve, String ChosenPath) {
     boolean onTheFly = false; // Use the path defined in code or loaded from PathPlanner.
     PathPlannerTrajectory example;
     if (onTheFly) {
@@ -62,7 +62,9 @@ public final class Autos {
       // position, heading(direction of travel), holonomic rotation
       );
     } else {
-      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup(ChosenPath, new PathConstraints(4, 3));
+      //The max velocity listed here is our theoretical max velocity - 3.65 meters per second. If this breaks things, 4
+      // worked in Blacksburg.
+      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup(ChosenPath, new PathConstraints(3.65, 3));
       // This is just an example event map. It would be better to have a constant,
       // global event map
       // in your code that will be used by all path following commands.
@@ -75,7 +77,6 @@ public final class Autos {
       // along with your subsystems.
       SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
           swerve::getPose,
-          // poser::getCurrentPose,
           // Pose2d supplier
           swerve::resetOdometry,
           // Pose2d consumer, used to reset odometry at the beginning of auto
@@ -98,7 +99,7 @@ public final class Autos {
       return Commands.sequence(autoBuilder.fullAuto(example1));
     }
     swerve.postTrajectory(example);
-    return Commands.sequence(new FollowTrajectory(swerve, example, true, poser));
+    return Commands.sequence(new FollowTrajectory(swerve, example, true));
   }
 
   // /**

@@ -12,6 +12,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.LimelightHelpers;
+
 import java.io.File;
 
 import swervelib.SwerveController;
@@ -20,7 +22,7 @@ import swervelib.math.SwerveKinematics2;
 import swervelib.parser.SwerveControllerConfiguration;
 import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
-import swervelib.telemetry.SwerveDriveTelemetry;
+// import swervelib.telemetry.SwerveDriveTelemetry;
 
 
 public class SwerveSubsystem extends SubsystemBase
@@ -85,8 +87,38 @@ public class SwerveSubsystem extends SubsystemBase
   @Override
   public void periodic()
   {
-    
+
     swerveDrive.updateOdometry();
+
+
+    LimelightHelpers.Results result = LimelightHelpers.getLatestResults("limelight").targetingResults;
+    if (!(result.botpose[0] == 0 && result.botpose[1] == 0) && LimelightHelpers.getTV("limelight")) {
+      
+      // swerveDrive.addVisionMeasurement(LimelightHelpers.toPose2D(result.botpose_wpiblue),
+      //   Timer.getFPGATimestamp() - (result.latency_capture / 1000.0) - (result.latency_pipeline / 1000.0),
+      //   false, .5);
+
+      swerveDrive.addVisionMeasurement(LimelightHelpers.getBotPose2d_wpiBlue("limelight"),
+      Timer.getFPGATimestamp() - (result.latency_capture / 1000.0) - (result.latency_pipeline / 1000.0),
+      false, .5);
+
+
+      // if (alliance == Alliance.Blue) {
+      //   // double[] botpose = LimelightHelpers.getBotPose_wpiBlue("limelight");
+      //   drivebase.addVisionMeasurement(
+      //       LimelightHelpers.toPose2D(result.botpose_wpiblue),
+      //       Timer.getFPGATimestamp() - (result.latency_capture / 1000.0) - (result.latency_pipeline / 1000.0),
+      //       true,
+      //       1.0);
+      // } else if (alliance == Alliance.Red) {
+      //   // double[] botpose = LimelightHelpers.getBotPose_wpiRed("limelight");
+      //   drivebase.addVisionMeasurement(
+      //       LimelightHelpers.toPose2D(result.botpose_wpired),
+      //       Timer.getFPGATimestamp() - (result.latency_capture / 1000.0) - (result.latency_pipeline / 1000.0),
+      //       true,
+      //       1.0);
+
+      }
   }
 
   @Override

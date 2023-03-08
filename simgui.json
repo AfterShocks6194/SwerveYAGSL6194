@@ -28,16 +28,19 @@
       "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
       "/Shuffleboard/Vision/Field": "Field2d",
       "/SmartDashboard/Auto Pathing": "String Chooser",
+      "/SmartDashboard/Drive to 1": "Command",
+      "/SmartDashboard/Drive to 2": "Command",
+      "/SmartDashboard/Drive to 3": "Command",
+      "/SmartDashboard/Drive to 4": "Command",
+      "/SmartDashboard/Drive to 5": "Command",
+      "/SmartDashboard/Drive to 6": "Command",
+      "/SmartDashboard/Drive to 7": "Command",
+      "/SmartDashboard/Drive to 8": "Command",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/navX-Sensor[1]": "Gyro"
     },
     "windows": {
       "/SmartDashboard/Auto Pathing": {
-        "window": {
-          "visible": true
-        }
-      },
-      "/SmartDashboard/Field": {
         "window": {
           "visible": true
         }
