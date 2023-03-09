@@ -4,8 +4,8 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
+// import edu.wpi.first.math.geometry.Rotation3d;
+// import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
@@ -45,18 +45,18 @@ public final class Constants {
 
 }
 
-  public static class VisionConstants {
+  // public static class VisionConstants {
 
-    /**
-     * Physical location of the camera on the robot, relative to the center of the robot.
-     */
-    public static final Transform3d CAMERA_TO_ROBOT =
-        new Transform3d(new Translation3d(Units.inchesToMeters(14), 0.0, Units.inchesToMeters(8)), new Rotation3d());
-    public static final Transform3d ROBOT_TO_CAMERA = CAMERA_TO_ROBOT.inverse();
+  //   /**
+  //    * Physical location of the camera on the robot, relative to the center of the robot.
+  //    */
+  //   public static final Transform3d CAMERA_TO_ROBOT =
+  //       new Transform3d(new Translation3d(Units.inchesToMeters(14), 0.0, Units.inchesToMeters(8)), new Rotation3d());
+  //   public static final Transform3d ROBOT_TO_CAMERA = CAMERA_TO_ROBOT.inverse();
 
-    public static final double FIELD_LENGTH_METERS = 16.54175;
-    public static final double FIELD_WIDTH_METERS = 8.0137;
-  }
+  //   public static final double FIELD_LENGTH_METERS = 16.54175;
+  //   public static final double FIELD_WIDTH_METERS = 8.0137;
+  // }
 
   public static final class Auton
   {
