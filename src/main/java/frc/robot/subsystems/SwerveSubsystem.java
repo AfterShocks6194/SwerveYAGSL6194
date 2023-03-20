@@ -91,14 +91,14 @@ public class SwerveSubsystem extends SubsystemBase
     swerveDrive.updateOdometry();
 
 
-    // LimelightHelpers.Results result = LimelightHelpers.getLatestResults("limelight").targetingResults;
-    // if (!(result.botpose[0] == 0 && result.botpose[1] == 0) && LimelightHelpers.getTV("limelight")) {
+    LimelightHelpers.Results result = LimelightHelpers.getLatestResults("limelight").targetingResults;
+    if (!(result.botpose[0] == 0 && result.botpose[1] == 0) && LimelightHelpers.getTV("limelight")) {
       
-    //   swerveDrive.addVisionMeasurement(LimelightHelpers.getBotPose2d_wpiBlue("limelight"),
-    //   Timer.getFPGATimestamp() - (result.latency_capture / 1000.0) - (result.latency_pipeline / 1000.0),
-    //   true, .4);
+      swerveDrive.addVisionMeasurement(LimelightHelpers.getBotPose2d_wpiBlue("limelight"),
+      Timer.getFPGATimestamp() - (result.latency_capture / 1000.0) - (result.latency_pipeline / 1000.0),
+      true, .4);
 
-    //   }
+      }
   }
 
   @Override

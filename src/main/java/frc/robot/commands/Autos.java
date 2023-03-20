@@ -53,7 +53,7 @@ public final class Autos {
       // Simple path with holonomic rotation. Stationary start/end. Max velocity of 4
       // m/s and max accel of 3 m/s^2
       example = PathPlanner.generatePath(
-          new PathConstraints(4, 3),
+          new PathConstraints(1, 1),
           new PathPoint(new Translation2d(0, 0), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)),
           // position, heading(direction of travel), holonomic rotation
           new PathPoint(new Translation2d(3, 5), Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(90)),
@@ -64,7 +64,7 @@ public final class Autos {
     } else {
       //The max velocity listed here is our theoretical max velocity - 3.65 meters per second. If this breaks things, 4
       // worked in Blacksburg.
-      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup(ChosenPath, new PathConstraints(3.65, 3));
+      List<PathPlannerTrajectory> example1 = PathPlanner.loadPathGroup(ChosenPath, new PathConstraints(1, 1));
       // This is just an example event map. It would be better to have a constant,
       // global event map
       // in your code that will be used by all path following commands.

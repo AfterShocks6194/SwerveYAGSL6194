@@ -1,324 +1,431 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package frc.robot.subsystems;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMax.SoftLimitDirection;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
+import com.frcteam3255.utils.SN_Math;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants;
+import frc.robot.RobotContainer;
+import frc.robot.Constants.constArm;
+import frc.robot.Constants.constArm.ArmState;
+import frc.robot.RobotMap.mapArm;
+import frc.robot.RobotPreferences.prefArm;
 
 public class Arm extends SubsystemBase {
-  private CANSparkMax shoulder;
-  private CANSparkMax intake;
-  private CANSparkMax wrist;
-  public static Arm currentInstance;
 
-  private SparkMaxPIDController shoulder_pidController;
-  private RelativeEncoder shoulder_encoder;
-  public double shoulder_kP, shoulder_kI, shoulder_kD, shoulder_kIz, shoulder_kFF, shoulder_kMaxOutput, shoulder_kMinOutput, shoulder_maxRPM, shoulder_maxVel, shoulder_minVel, shoulder_maxAcc, shoulder_allowedErr;
-  private SparkMaxPIDController wrist_pidController;
-  private RelativeEncoder wrist_encoder;
-  public double wrist_kP, wrist_kI, wrist_kD, wrist_kIz, wrist_kFF, wrist_kMaxOutput, wrist_kMinOutput, wrist_maxRPM, wrist_maxVel, wrist_minVel, wrist_maxAcc, wrist_allowedErr;
+  TalonFX shoulderJoint;
+  TalonFX elbowJoint;
+
+  TalonFXConfiguration shoulderConfig;
+  TalonFXConfiguration elbowConfig;
+
+  DutyCycleEncoder shoulderEncoder;
+  DutyCycleEncoder elbowEncoder;
+
+  double shoulderOffset;
+  double elbowOffset;
+
+  ArmState goalState;
+  Rotation2d goalShoulderAngle;
+  Rotation2d goalElbowAngle;
+
+  int desiredNode;
 
   public Arm() {
-    shoulder = new CANSparkMax(ArmConstants.shoulderMotorID, MotorType.kBrushless);
-    intake = new CANSparkMax(ArmConstants.intakeMotorID, MotorType.kBrushless);
-    wrist = new CANSparkMax(ArmConstants.wristMotorID, MotorType.kBrushless);
+    shoulderJoint = new TalonFX(mapArm.SHOULDER_CAN);
+    elbowJoint = new TalonFX(mapArm.ELBOW_CAN);
 
-        // initialze PID controller and encoder objects
-        shoulder_pidController = shoulder.getPIDController();
-        shoulder_encoder = shoulder.getEncoder();
-    
-        // PID coefficients
-        shoulder_kP = 5e-5; 
-        shoulder_kI = 0;
-        shoulder_kD = 0; 
-        shoulder_kIz = 0; 
-        shoulder_kFF = 0.000156; 
-        shoulder_kMaxOutput = 1; 
-        shoulder_kMinOutput = -1;
-        shoulder_maxRPM = 11000;
-    
-        // Smart Motion Coefficients
-        shoulder_maxVel = 11000; // rpm
-        shoulder_maxAcc = 3000;
-    
-        // set PID coefficients
-        shoulder_pidController.setP(shoulder_kP);
-        shoulder_pidController.setI(shoulder_kI);
-        shoulder_pidController.setD(shoulder_kD);
-        shoulder_pidController.setIZone(shoulder_kIz);
-        shoulder_pidController.setFF(shoulder_kFF);
-        shoulder_pidController.setOutputRange(shoulder_kMinOutput, shoulder_kMaxOutput);
+    shoulderConfig = new TalonFXConfiguration();
+    elbowConfig = new TalonFXConfiguration();
 
-    int shoulder_smartMotionSlot = 0;
-    shoulder_pidController.setSmartMotionMaxVelocity(shoulder_maxVel, shoulder_smartMotionSlot);
-    shoulder_pidController.setSmartMotionMinOutputVelocity(shoulder_minVel, shoulder_smartMotionSlot);
-    shoulder_pidController.setSmartMotionMaxAccel(shoulder_maxAcc, shoulder_smartMotionSlot);
-    shoulder_pidController.setSmartMotionAllowedClosedLoopError(shoulder_allowedErr, shoulder_smartMotionSlot);
-    shoulder_encoder.setPositionConversionFactor(1/2.577777);
-    shoulder.setSoftLimit(SoftLimitDirection.kForward, 125);
-    shoulder.setSoftLimit(SoftLimitDirection.kReverse, -10);
-    shoulder.enableSoftLimit(SoftLimitDirection.kForward, true);
-    shoulder.enableSoftLimit(SoftLimitDirection.kReverse, true);
-    
+    //shoulderEncoder = new DutyCycleEncoder(mapArm.SHOULDER_ABSOLUTE_ENCODER_DIO);
+    //elbowEncoder = new DutyCycleEncoder(mapArm.ELBOW_ABSOLUTE_ENCODER_DIO);
 
-    // initialze PID controller and encoder objects
-    wrist_pidController = wrist.getPIDController();
-    wrist_encoder = wrist.getEncoder();
+    goalState = ArmState.NONE;
 
-    // PID coefficients
-    wrist_kP = 5e-5; 
-    wrist_kI = 0;
-    wrist_kD = 0; 
-    wrist_kIz = 0; 
-    wrist_kFF = 0.000156; 
-    wrist_kMaxOutput = .5; 
-    wrist_kMinOutput = -.5;
-    wrist_maxRPM = 5000;
+    desiredNode = 0;
 
-    // Smart Motion Coefficients
-    wrist_maxVel = 2000; // rpm
-    wrist_maxAcc = 1500;
-
-    // set PID coefficients
-    wrist_pidController.setP(wrist_kP);
-    wrist_pidController.setI(wrist_kI);
-    wrist_pidController.setD(wrist_kD);
-    wrist_pidController.setIZone(wrist_kIz);
-    wrist_pidController.setFF(wrist_kFF);
-    wrist_pidController.setOutputRange(wrist_kMinOutput, wrist_kMaxOutput);
-
-int wrist_smartMotionSlot = 0;
-wrist_pidController.setSmartMotionMaxVelocity(wrist_maxVel, wrist_smartMotionSlot);
-wrist_pidController.setSmartMotionMinOutputVelocity(wrist_minVel, wrist_smartMotionSlot);
-wrist_pidController.setSmartMotionMaxAccel(wrist_maxAcc, wrist_smartMotionSlot);
-wrist_pidController.setSmartMotionAllowedClosedLoopError(wrist_allowedErr, wrist_smartMotionSlot);
-wrist_encoder.setPositionConversionFactor(1/.225);
-    // wrist.setSoftLimit(SoftLimitDirection.kForward, ####);
-    // wrist.setSoftLimit(SoftLimitDirection.kReverse, ####);
-    // wrist.enableSoftLimit(SoftLimitDirection.kForward, true);
-    // wrist.enableSoftLimit(SoftLimitDirection.kReverse, true);
-
-
-    //Comment this line out if you're done tuning the shoulder
-    ShoulderTunerSetup();
-
-    //COmment this line out if you're done tuning the wrist
-    wristTunerSetup();
-
-    CoastMode();
-    shoulder.setInverted(true);
-    wrist.setInverted(true);
-    }
-
-  public void setSpeed(double speed) {
-    shoulder.set(speed);
-    wrist.set(0);
+    configure();
   }
 
+  public void configure() {
 
-  public void setIntakeSpeed(double speed) {
-    intake.set(speed);
+    // shoulder config
+    shoulderJoint.configFactoryDefault();
+
+    shoulderConfig.slot0.kP = prefArm.shoulderP.getValue();
+    shoulderConfig.slot0.kI = prefArm.shoulderI.getValue();
+    shoulderConfig.slot0.kD = prefArm.shoulderD.getValue();
+
+    shoulderConfig.motionCruiseVelocity = prefArm.shoulderMaxSpeed.getValue();
+    shoulderConfig.motionAcceleration = prefArm.shoulderMaxAccel.getValue();
+
+    shoulderConfig.slot0.allowableClosedloopError = SN_Math.degreesToFalcon(
+        prefArm.shoulderTolerance.getValue(),
+        constArm.SHOULDER_GEAR_RATIO);
+
+    shoulderConfig.slot0.closedLoopPeakOutput = prefArm.shoulderClosedLoopPeakOutput.getValue();
+
+    shoulderConfig.forwardSoftLimitEnable = true;
+    shoulderConfig.reverseSoftLimitEnable = true;
+
+    shoulderConfig.forwardSoftLimitThreshold = SN_Math
+        .degreesToFalcon(Units.radiansToDegrees(constArm.SHOULDER_FORWARD_LIMIT), constArm.SHOULDER_GEAR_RATIO);
+    shoulderConfig.reverseSoftLimitThreshold = SN_Math
+        .degreesToFalcon(Units.radiansToDegrees(constArm.SHOULDER_REVERSE_LIMIT), constArm.SHOULDER_GEAR_RATIO);
+
+    shoulderJoint.configAllSettings(shoulderConfig);
+
+    shoulderJoint.setInverted(constArm.SHOULDER_MOTOR_INVERT);
+    shoulderJoint.setNeutralMode(constArm.SHOULDER_MOTOR_BREAK);
+
+    // elbow config
+    elbowJoint.configFactoryDefault();
+
+    elbowConfig.slot0.kP = prefArm.elbowP.getValue();
+    elbowConfig.slot0.kI = prefArm.elbowI.getValue();
+    elbowConfig.slot0.kD = prefArm.elbowD.getValue();
+
+    elbowConfig.motionCruiseVelocity = prefArm.elbowMaxSpeed.getValue();
+    elbowConfig.motionAcceleration = prefArm.elbowMaxAccel.getValue();
+
+    elbowConfig.slot0.allowableClosedloopError = SN_Math.degreesToFalcon(
+        prefArm.elbowTolerance.getValue(),
+        constArm.ELBOW_GEAR_RATIO);
+
+    elbowConfig.slot0.closedLoopPeakOutput = prefArm.elbowClosedLoopPeakOutput.getValue();
+
+    elbowConfig.forwardSoftLimitEnable = true;
+    elbowConfig.reverseSoftLimitEnable = true;
+
+    elbowConfig.forwardSoftLimitThreshold = SN_Math
+        .degreesToFalcon(Units.radiansToDegrees(constArm.ELBOW_FORWARD_LIMIT), constArm.ELBOW_GEAR_RATIO);
+    elbowConfig.reverseSoftLimitThreshold = SN_Math
+        .degreesToFalcon(Units.radiansToDegrees(constArm.ELBOW_REVERSE_LIMIT), constArm.ELBOW_GEAR_RATIO);
+
+    elbowJoint.configAllSettings(elbowConfig);
+
+    elbowJoint.setInverted(constArm.ELBOW_MOTOR_INVERT);
+    elbowJoint.setNeutralMode(constArm.ELBOW_MOTOR_BREAK);
   }
 
+  public void resetJointEncodersToAbsolute() {
+    shoulderJoint.setSelectedSensorPosition(
+        SN_Math.degreesToFalcon(getShoulderAbsoluteEncoder().getDegrees(), constArm.SHOULDER_GEAR_RATIO));
 
+    elbowJoint.setSelectedSensorPosition(
+        SN_Math.degreesToFalcon(getElbowAbsoluteEncoder().getDegrees(), constArm.ELBOW_GEAR_RATIO));
+  }
 
-/**
-   * set the reference position for the should and wrist simulataniously
-   *
-   * @param shoulderPosition - the position of the shoulder in degrees with 0 being stowed flate
-   * @param wristPosition - the position of the shoulder in degrees with 0 being stowed vertically
+  public void setJointsNeutralMode() {
+    shoulderJoint.setNeutralMode(constArm.SHOULDER_MOTOR_BREAK);
+    elbowJoint.setNeutralMode(constArm.ELBOW_MOTOR_BREAK);
+  }
+
+  /**
+   * Set the rotational positions of the shoulder and elbow joints.
+   * 
+   * @param shoulderAngle Shoulder position
+   * @param elbowAngle    Elbow position
    */
-public void setArmPosition(double shoulderPosition, double wristPosition){
-  wrist_pidController.setReference(wristPosition, CANSparkMax.ControlType.kSmartMotion);
-  shoulder_pidController.setReference(shoulderPosition, CANSparkMax.ControlType.kSmartMotion);
-}
+  public void setJointPositions(Rotation2d shoulderAngle, Rotation2d elbowAngle) {
+    double shoulderCounts = SN_Math.degreesToFalcon(shoulderAngle.getDegrees(), constArm.SHOULDER_GEAR_RATIO);
+    shoulderJoint.set(ControlMode.MotionMagic, shoulderCounts);
 
-
-  private void CoastMode() {
-    shoulder.setIdleMode(IdleMode.kBrake);
-    intake.setIdleMode(IdleMode.kBrake);
-    wrist.setIdleMode(IdleMode.kBrake);
+    double elbowCounts = SN_Math.degreesToFalcon(elbowAngle.getDegrees(), constArm.ELBOW_GEAR_RATIO);
+    elbowJoint.set(ControlMode.MotionMagic, elbowCounts);
   }
 
+  /**
+   * Set the percent output of the shoulder and elbow joint.
+   * 
+   * @param shoulderPercent Shoulder percent output
+   * @param elbowPercent    Elbow percent output
+   */
+  private void setJointPercentOutputs(double shoulderPercent, double elbowPercent) {
+    shoulderJoint.set(ControlMode.PercentOutput, shoulderPercent);
+    elbowJoint.set(ControlMode.PercentOutput, elbowPercent);
+  }
 
-private void ShoulderTunerSetup(){
-  
-    // display PID coefficients on SmartDashboard
-    SmartDashboard.putNumber("Shoulder/P Gain", shoulder_kP);
-    SmartDashboard.putNumber("Shoulder/I Gain", shoulder_kI);
-    SmartDashboard.putNumber("Shoulder/D Gain", shoulder_kD);
-    SmartDashboard.putNumber("Shoulder/I Zone", shoulder_kIz);
-    SmartDashboard.putNumber("Shoulder/Feed Forward", shoulder_kFF);
-    SmartDashboard.putNumber("Shoulder/Max Output", shoulder_kMaxOutput);
-    SmartDashboard.putNumber("Shoulder/Min Output", shoulder_kMinOutput);
+  /**
+   * Neutral the outputs of each joint motor
+   */
+  public void neutralJointOutputs() {
+    shoulderJoint.neutralOutput();
+    elbowJoint.neutralOutput();
+  }
 
-    // display Smart Motion coefficients
-    SmartDashboard.putNumber("Shoulder/Max Velocity", shoulder_maxVel);
-    SmartDashboard.putNumber("Shoulder/Min Velocity", shoulder_minVel);
-    SmartDashboard.putNumber("Shoulder/Max Acceleration", shoulder_maxAcc);
-    SmartDashboard.putNumber("Shoulder/Allowed Closed Loop Error", shoulder_allowedErr);
-    SmartDashboard.putNumber("Shoulder/Set Position", 0);
-    SmartDashboard.putNumber("Shoulder/Set Position", 0);
-}
+  /**
+   * Get the shoulder absolute encoder reading.
+   * 
+   * @return Shoulder absolute encoder reading
+   */
+  private Rotation2d getShoulderAbsoluteEncoder() {
+    double rotations = shoulderEncoder.getAbsolutePosition();
+    rotations -= Units.radiansToRotations(shoulderOffset);
+    rotations = MathUtil.inputModulus(rotations, -0.5, 0.5);
 
-private void ShoulderTuner(){
-   // read PID coefficients from SmartDashboard
-   double p = SmartDashboard.getNumber("Shoulder/P Gain", 0);
-   double i = SmartDashboard.getNumber("Shoulder/I Gain", 0);
-   double d = SmartDashboard.getNumber("Shoulder/D Gain", 0);
-   double iz = SmartDashboard.getNumber("Shoulder/I Zone", 0);
-   double ff = SmartDashboard.getNumber("Shoulder/Feed Forward", 0);
-   double max = SmartDashboard.getNumber("Shoulder/Max Output", 0);
-   double min = SmartDashboard.getNumber("Shoulder/Min Output", 0);
-   double maxV = SmartDashboard.getNumber("Shoulder/Max Velocity", 0);
-   double minV = SmartDashboard.getNumber("Shoulder/Min Velocity", 0);
-   double maxA = SmartDashboard.getNumber("Shoulder/Max Acceleration", 0);
-   double allE = SmartDashboard.getNumber("Shoulder/Allowed Closed Loop Error", 0);
+    if (constArm.SHOULDER_ABSOLUTE_ENCODER_INVERT) {
+      return Rotation2d.fromRotations(-rotations);
+    } else {
+      return Rotation2d.fromRotations(rotations);
+    }
+  }
 
-   // if PID coefficients on SmartDashboard have changed, write new values to controller
-   if((p != shoulder_kP)) { shoulder_pidController.setP(p); shoulder_kP = p; }
-   if((i != shoulder_kI)) { shoulder_pidController.setI(i); shoulder_kI = i; }
-   if((d != shoulder_kD)) { shoulder_pidController.setD(d); shoulder_kD = d; }
-   if((iz != shoulder_kIz)) { shoulder_pidController.setIZone(iz); shoulder_kIz = iz; }
-   if((ff != shoulder_kFF)) { shoulder_pidController.setFF(ff); shoulder_kFF = ff; }
-   if((max != shoulder_kMaxOutput) || (min != shoulder_kMinOutput)) { 
-     shoulder_pidController.setOutputRange(min, max); 
-     shoulder_kMinOutput = min; shoulder_kMaxOutput = max; 
-   }
-   if((maxV != shoulder_maxVel)) { shoulder_pidController.setSmartMotionMaxVelocity(maxV,0); shoulder_maxVel = maxV; }
-   if((minV != shoulder_minVel)) { shoulder_pidController.setSmartMotionMinOutputVelocity(minV,0); shoulder_minVel = minV; }
-   if((maxA != shoulder_maxAcc)) { shoulder_pidController.setSmartMotionMaxAccel(maxA,0); shoulder_maxAcc = maxA; }
-   if((allE != shoulder_allowedErr)) { shoulder_pidController.setSmartMotionAllowedClosedLoopError(allE,0); shoulder_allowedErr = allE; }
+  /**
+   * Get the elbow absolute encoder reading.
+   * 
+   * @return Elbow absolute encoder reading
+   */
+  private Rotation2d getElbowAbsoluteEncoder() {
+    double rotations = elbowEncoder.getAbsolutePosition();
+    rotations -= Units.radiansToRotations(elbowOffset);
+    rotations = MathUtil.inputModulus(rotations, -0.5, 0.5);
 
-   double shoulder_setPoint, shoulder_processVariable;
+    if (constArm.ELBOW_ABSOLUTE_ENCODER_INVERT) {
+      return Rotation2d.fromRotations(-rotations);
+    } else {
+      return Rotation2d.fromRotations(rotations);
+    }
+  }
 
-   shoulder_setPoint = SmartDashboard.getNumber("Shoulder/Set Position", 0);
-     /**
-      * As with other PID modes, Smart Motion is set by calling the
-      * setReference method on an existing pid object and setting
-      * the control type to kSmartMotion
-      */
-    //  shoulder_pidController.setReference(shoulder_setPoint, CANSparkMax.ControlType.kSmartMotion);
-     shoulder_processVariable = shoulder_encoder.getPosition();
-   
-   SmartDashboard.putNumber("Shoulder/SetPoint", shoulder_setPoint);
-   SmartDashboard.putNumber("Shoulder/Process Variable", shoulder_processVariable);
-   SmartDashboard.putNumber("Shoulder/Output", shoulder.getAppliedOutput());  
-}
+  /**
+   * Get the shoulder joint position from the motor.
+   * 
+   * @return Shoulder joint position
+   */
+  public Rotation2d getShoulderPosition() {
+    return Rotation2d
+        .fromDegrees(SN_Math.falconToDegrees(shoulderJoint.getSelectedSensorPosition(), constArm.SHOULDER_GEAR_RATIO));
+  }
 
-// private void coDriverControlsSetup(){
-//   SmartDashboard.putBoolean("CoDriver/Cone Mode", true);
-//   SmartDashboard.putBoolean("CoDriver/Slomo Mode", false);
-//   SmartDashboard.putNumber("CoDriver/Shoulder Pickup Angle", 47);
-//   SmartDashboard.putNumber("CoDriver/Wrist Pickup Angle", 75);
+  /**
+   * Get the elbow joint position from the motor.
+   * 
+   * @return Elbow joint position
+   */
+  public Rotation2d getElbowPosition() {
+    return Rotation2d
+        .fromDegrees(SN_Math.falconToDegrees(elbowJoint.getSelectedSensorPosition(), constArm.ELBOW_GEAR_RATIO));
+  }
 
-// }
-
-// private void coDriverControls(){
-//   SmartDashboard.getBoolean("CoDriver/Cone Mode", true);
-//   SmartDashboard.getBoolean("CoDriver/Slomo Mode", false);
-//   SmartDashboard.getNumber("CoDriver/Shoulder Pickup Angle", 47);
-//   SmartDashboard.getNumber("CoDriver/Wrist Pickup Angle", 75);
-
-
-
-// }
-
-
-private void wristTunerSetup(){
-  
-  // display PID coefficients on SmartDashboard
-  SmartDashboard.putNumber("Wrist/P Gain", wrist_kP);
-  SmartDashboard.putNumber("Wrist/I Gain", wrist_kI);
-  SmartDashboard.putNumber("Wrist/D Gain", wrist_kD);
-  SmartDashboard.putNumber("Wrist/I Zone", wrist_kIz);
-  SmartDashboard.putNumber("Wrist/Feed Forward", wrist_kFF);
-  SmartDashboard.putNumber("Wrist/Max Output", wrist_kMaxOutput);
-  SmartDashboard.putNumber("Wrist/Min Output", wrist_kMinOutput);
-
-  // display Smart Motion coefficients
-  SmartDashboard.putNumber("Wrist/Max Velocity", wrist_maxVel);
-  SmartDashboard.putNumber("Wrist/Min Velocity", wrist_minVel);
-  SmartDashboard.putNumber("Wrist/Max Acceleration", wrist_maxAcc);
-  SmartDashboard.putNumber("Wrist/Allowed Closed Loop Error", wrist_allowedErr);
-  SmartDashboard.putNumber("Wrist/Set Position", 0);
-  SmartDashboard.putNumber("Wrist/Set Velocity", 0);
-
-}
-
-private void wristTuner(){
- // read PID coefficients from SmartDashboard
- double p = SmartDashboard.getNumber("Wrist/P Gain", 0);
- double i = SmartDashboard.getNumber("Wrist/I Gain", 0);
- double d = SmartDashboard.getNumber("Wrist/D Gain", 0);
- double iz = SmartDashboard.getNumber("Wrist/I Zone", 0);
- double ff = SmartDashboard.getNumber("Wrist/Feed Forward", 0);
- double max = SmartDashboard.getNumber("Wrist/Max Output", 0);
- double min = SmartDashboard.getNumber("Wrist/Min Output", 0);
- double maxV = SmartDashboard.getNumber("Wrist/Max Velocity", 0);
- double minV = SmartDashboard.getNumber("Wrist/Min Velocity", 0);
- double maxA = SmartDashboard.getNumber("Wrist/Max Acceleration", 0);
- double allE = SmartDashboard.getNumber("Wrist/Allowed Closed Loop Error", 0);
-
- // if PID coefficients on SmartDashboard have changed, write new values to controller
- if((p != wrist_kP)) { wrist_pidController.setP(p); wrist_kP = p; }
- if((i != wrist_kI)) { wrist_pidController.setI(i); wrist_kI = i; }
- if((d != wrist_kD)) { wrist_pidController.setD(d); wrist_kD = d; }
- if((iz != wrist_kIz)) { wrist_pidController.setIZone(iz); wrist_kIz = iz; }
- if((ff != wrist_kFF)) { wrist_pidController.setFF(ff); wrist_kFF = ff; }
- if((max != wrist_kMaxOutput) || (min != wrist_kMinOutput)) { 
-   wrist_pidController.setOutputRange(min, max); 
-   wrist_kMinOutput = min; wrist_kMaxOutput = max; 
- }
- if((maxV != wrist_maxVel)) { wrist_pidController.setSmartMotionMaxVelocity(maxV,0); wrist_maxVel = maxV; }
- if((minV != wrist_minVel)) { wrist_pidController.setSmartMotionMinOutputVelocity(minV,0); wrist_minVel = minV; }
- if((maxA != wrist_maxAcc)) { wrist_pidController.setSmartMotionMaxAccel(maxA,0); wrist_maxAcc = maxA; }
- if((allE != wrist_allowedErr)) { wrist_pidController.setSmartMotionAllowedClosedLoopError(allE,0); wrist_allowedErr = allE; }
-
- double wrist_setPoint, wrist_processVariable;
-
- wrist_setPoint = SmartDashboard.getNumber("Wrist/Set Position", 0);
-   /**
-    * As with other PID modes, Smart Motion is set by calling the
-    * setReference method on an existing pid object and setting
-    * the control type to kSmartMotion
-    */
-  //  wrist_pidController.setReference(wrist_setPoint, CANSparkMax.ControlType.kSmartMotion);
-   wrist_processVariable = wrist_encoder.getPosition();
- 
- SmartDashboard.putNumber("Wrist/SetPoint", wrist_setPoint);
- SmartDashboard.putNumber("Wrist/Process Variable", wrist_processVariable);
- SmartDashboard.putNumber("Wrist/Output", wrist.getAppliedOutput());  
-}
-
-
-    /**
-     * Initialize the current DriveBase instance
-     */
-    public static void init() {
-      if (currentInstance == null) {
-          currentInstance = new Arm();
+  /**
+   * Get the current state of the arm. If the arm is not currently at a valid
+   * state, this will return ArmState.NONE.
+   * 
+   * @return Current arm state.
+   */
+  private ArmState getCurrentState() {
+    for (ArmState state : ArmState.values()) {
+      if (areJointsInToleranceToState(state)) {
+        return state;
       }
+    }
+    return ArmState.NONE;
   }
 
-  public static Arm getInstance() {
-    init();
-    return currentInstance;
-}
+  /**
+   * Check if the arm is currently at the given state.
+   * 
+   * @return True if the arm is currently at the given state
+   */
+  public boolean isCurrentState(ArmState state) {
+    return getCurrentState() == state;
+  }
 
-@Override
-public void periodic() {
-  //Comment this line out if you're not using the shoulder tuner
-     ShoulderTuner();
-     wristTuner();
-    
-    
-}
-  
+  /**
+   * Check if a given joint rotation is within a given tolerance to a given goal
+   * rotation.
+   * 
+   * @param jointRotation Current rotation of joint
+   * @param goalRotation  Goal rotation of joint
+   * @param tolerance     Tolerance of joint rotation
+   * @return If the joint within tolerance of the goal
+   */
+  private boolean isJointInToleranceToAngle(Rotation2d jointRotation, Rotation2d goalRotation, Rotation2d tolerance) {
+    double jointToGoal = Math.abs(jointRotation.getRadians() - goalRotation.getRadians());
+    double fudgedTolerance = tolerance.getRadians() * prefArm.armToleranceFudgeFactor.getValue();
+
+    return jointToGoal < fudgedTolerance;
+  }
+
+  /**
+   * Check if the shoulder and elbow joints are within tolerance of a given state.
+   * 
+   * @param state State to check if joints are in tolerance to
+   * @return If joints are in tolerance of a given state
+   */
+  private boolean areJointsInToleranceToState(ArmState state) {
+    boolean isShoulderInTolerance = isJointInToleranceToAngle(
+        getShoulderPosition(),
+        state.shoulderAngle,
+        Rotation2d.fromDegrees(prefArm.shoulderTolerance.getValue()));
+
+    boolean isElbowInTolerance = isJointInToleranceToAngle(
+        getElbowPosition(),
+        state.elbowAngle,
+        Rotation2d.fromDegrees(prefArm.elbowTolerance.getValue()));
+
+    return isShoulderInTolerance && isElbowInTolerance;
+  }
+
+  /**
+   * Get the goal arm state.
+   * 
+   * @return Goal arm state
+   */
+  public ArmState getGoalState() {
+    return goalState;
+  }
+
+  /**
+   * Set the goal arm state.
+   * 
+   * @param goalState Goal arm state
+   */
+  public void setGoalState(ArmState goalState) {
+    this.goalState = goalState;
+  }
+
+  public boolean isGoalState(ArmState state) {
+    return goalState == state;
+  }
+
+  /**
+   * Get the position of the arm tip in 2D space relative to the robot in meters.
+   * 
+   * @return Position of of arm tip in meters
+   */
+  private Translation2d getArmTipPosition() {
+    double a1 = constArm.SHOULDER_LENGTH;
+    double a2 = constArm.ELBOW_LENGTH;
+
+    double q1 = getShoulderPosition().getRadians();
+    double q2 = getElbowPosition().getRadians() + q1;
+
+    double x = (a2 * Math.cos(q1 + q2)) + (a1 * Math.cos(q1));
+    double y = (a2 * Math.sin(q1 + q2)) + (a1 * Math.sin(q1));
+
+    return new Translation2d(x, y);
+  }
+
+  public boolean isCubeNode() {
+    int gridlessNode = desiredNode % 9;
+    return gridlessNode == 2 ||
+        gridlessNode == 5;
+  }
+
+  public boolean isConeNode() {
+    int gridlessNode = desiredNode % 9;
+    return gridlessNode == 1 ||
+        gridlessNode == 3 ||
+        gridlessNode == 4 ||
+        gridlessNode == 6;
+  }
+
+  public boolean isHighNode() {
+    int gridlessNode = desiredNode % 9;
+    return gridlessNode == 1 ||
+        gridlessNode == 2 ||
+        gridlessNode == 3;
+  }
+
+  public boolean isMidNode() {
+    int gridlessNode = desiredNode % 9;
+    return gridlessNode == 4 ||
+        gridlessNode == 5 ||
+        gridlessNode == 6;
+  }
+
+  public boolean isHybridNode() {
+    int gridlessNode = desiredNode % 9;
+    return gridlessNode == 7 ||
+        gridlessNode == 8 ||
+        gridlessNode == 9;
+  }
+
+  public boolean isValidNode() {
+    return desiredNode > 0 && desiredNode <= 27;
+  }
+
+  /**
+   * Set the desired node. 0 represents no desired node, and there are a total of
+   * 27 nodes.
+   * 
+   * <pre>
+   *1, 2, 3, 10, 11, 12, 19, 20, 21
+   *4, 5, 6, 13, 14, 15, 22, 23, 24
+   *7, 8, 9, 16, 17, 18, 25, 26, 27
+   * </pre>
+   * 
+   * @param desiredNode Node to desire
+   */
+  public void setDesiredNode(int desiredNode) {
+    this.desiredNode = MathUtil.clamp(desiredNode, 0, 27);
+  }
+
+  public void setStateFromDesiredNode() {
+    switch (desiredNode % 9) {
+      case 0:
+        setGoalState(ArmState.NONE);
+        break;
+      case 1:
+        setGoalState(ArmState.HIGH_CONE_SCORE);
+        break;
+      case 2:
+        setGoalState(ArmState.HIGH_CUBE_SCORE_PLACE);
+        break;
+      case 3:
+        setGoalState(ArmState.HIGH_CONE_SCORE);
+        break;
+      case 4:
+        setGoalState(ArmState.MID_CONE_SCORE);
+        break;
+      case 5:
+        setGoalState(ArmState.MID_CUBE_SCORE);
+        break;
+      case 6:
+        setGoalState(ArmState.MID_CONE_SCORE);
+        break;
+      case 7:
+        setGoalState(ArmState.HYBRID_SCORE);
+        break;
+      case 8:
+        setGoalState(ArmState.HYBRID_SCORE);
+        break;
+      case 9:
+        setGoalState(ArmState.HYBRID_SCORE);
+      default:
+        setGoalState(ArmState.NONE);
+        break;
+    }
+  }
+
+  @Override
+  public void periodic() {
+
+    if (Constants.OUTPUT_DEBUG_VALUES) {
+     
+    }
+  }
+
+  public static Object setArmPosition(int i, int j) {
+    return null;
+  }
+
+  public static Object setIntakeSpeed(double d) {
+    return null;
+  }
 }

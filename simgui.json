@@ -1,10 +1,46 @@
 {
   "HALProvider": {
+    "DIO": {
+      "window": {
+        "visible": true
+      }
+    },
     "Other Devices": {
+      "DutyCycleEncoder[1]": {
+        "header": {
+          "open": true
+        }
+      },
+      "DutyCycleEncoder[2]": {
+        "header": {
+          "open": true
+        }
+      },
+      "REV Color Sensor V3[0,82]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX[2]": {
+        "header": {
+          "open": true
+        }
+      },
       "navX-Sensor[0]": {
         "header": {
           "open": true
         }
+      }
+    },
+    "RoboRIO": {
+      "5V Rail": {
+        "open": true
+      },
+      "RoboRIO Input": {
+        "open": true
+      },
+      "window": {
+        "visible": true
       }
     }
   },
@@ -37,6 +73,7 @@
       "/SmartDashboard/Drive to 7": "Command",
       "/SmartDashboard/Drive to 8": "Command",
       "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Pigeon 2 [13]": "Gyro",
       "/SmartDashboard/navX-Sensor[1]": "Gyro"
     },
     "windows": {
@@ -55,20 +92,29 @@
       "open": false
     },
     "transitory": {
+      "FMSInfo": {
+        "open": true
+      },
       "Shuffleboard": {
         "open": true
       },
       "SmartDashboard": {
+        "Auto Pathing": {
+          "open": true
+        },
+        "Drive to 1": {
+          "open": true
+        },
+        "Drive to 8": {
+          "open": true
+        },
         "Field": {
           "open": true
         },
         "PPSwerveControllerCommand": {
           "open": true
         },
-        "open": true,
-        "swerve": {
-          "open": true
-        }
+        "open": true
       }
     }
   }
