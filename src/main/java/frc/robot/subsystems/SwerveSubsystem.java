@@ -136,7 +136,6 @@ public class SwerveSubsystem extends SubsystemBase
    */
   public Pose2d getPose()
   {
-    // return poseEstimator.getCurrentPose();
   return swerveDrive.getPose();
   }
 

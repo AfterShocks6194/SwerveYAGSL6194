@@ -157,21 +157,24 @@ public class RobotContainer {
     Command retractArmCommand = new RunCommand(() -> arm.setArmPosition(0, 0), arm);
     Command collectgamepiececommand = new RunCommand(() -> arm.setArmPosition(50, 70), arm);
     Command IntakeInwards = new RunCommand(() -> arm.setIntakeSpeed(.5));
+    Command IntakeInwards2 = new RunCommand(() -> arm.setIntakeSpeed(.5));
     Command IntakeOutwards = new RunCommand(() -> arm.setIntakeSpeed(-.5));
+    Command IntakeOutwards2 = new RunCommand(() -> arm.setIntakeSpeed(-.5));
+    // Command StopIntake = new RunCommand(() -> arm.setIntakeSpeed(0));
 
     Command cubeModeEngage = new RunCommand(() -> arm.setArmPosition(35, 245), arm);
     Command cubeModeScore = new RunCommand(() -> arm.setArmPosition(87, 210), arm);
 
 
     /* Driver Buttons */
-    StartButton.onTrue((new InstantCommand(drivebase::zeroGyro)));
-    YButton.onTrue(collectgamepiececommand);
+    StartButton.whileTrue((new InstantCommand(drivebase::zeroGyro)));
+    YButton.onTrue(collectgamepiececommand.alongWith(IntakeOutwards2));
 
-    XButton.onTrue(cubeModeEngage);
+    XButton.onTrue(cubeModeEngage.alongWith(IntakeOutwards));
     BButton.onTrue(cubeModeScore);
     
     LeftBumper.whileTrue(IntakeInwards);
-    RightBumper.whileTrue(IntakeOutwards);
+    // RightBumper.whileTrue(IntakeOutwards);
 
     AButton.onTrue(extendArmCommand);
     AButton.onFalse(retractArmCommand);
@@ -181,30 +184,30 @@ public class RobotContainer {
     //Co-Driver Buttons on Dashboard
 
 
-    // IT IS IMPORTANT THAT YOU SUBTRACT THE X OFFSET FROM TAGS 1, 2, 3, 4 AND ADD THE OFFSET TO 5, 6, 7, 8
-    SmartDashboard.putData("Drive to 1", driveToAprilTag(drivebase, 1, Rotation2d.fromDegrees(0),
-    Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
+    // // IT IS IMPORTANT THAT YOU SUBTRACT THE X OFFSET FROM TAGS 1, 2, 3, 4 AND ADD THE OFFSET TO 5, 6, 7, 8
+    // SmartDashboard.putData("Drive to 1", driveToAprilTag(drivebase, 1, Rotation2d.fromDegrees(0),
+    // Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
 
-    SmartDashboard.putData("Drive to 2", driveToAprilTag(drivebase, 2, Rotation2d.fromDegrees(0),
-    Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
+    // SmartDashboard.putData("Drive to 2", driveToAprilTag(drivebase, 2, Rotation2d.fromDegrees(0),
+    // Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
 
-    SmartDashboard.putData("Drive to 3", driveToAprilTag(drivebase, 3, Rotation2d.fromDegrees(0),
-    Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
+    // SmartDashboard.putData("Drive to 3", driveToAprilTag(drivebase, 3, Rotation2d.fromDegrees(0),
+    // Rotation2d.fromDegrees(0), new Translation2d((-Constants.xOffset), 0)));
 
-    SmartDashboard.putData("Drive to 4", driveToAprilTag(drivebase, 4, Rotation2d.fromDegrees(0),
-    Rotation2d.fromDegrees(0), new Translation2d(-Constants.xOffset, (Units.inchesToMeters(0)))));
+    // SmartDashboard.putData("Drive to 4", driveToAprilTag(drivebase, 4, Rotation2d.fromDegrees(0),
+    // Rotation2d.fromDegrees(0), new Translation2d(-Constants.xOffset, (Units.inchesToMeters(0)))));
 
-    SmartDashboard.putData("Drive to 5", driveToAprilTag(drivebase, 5, Rotation2d.fromDegrees(180),
-    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+    // SmartDashboard.putData("Drive to 5", driveToAprilTag(drivebase, 5, Rotation2d.fromDegrees(180),
+    // Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
 
-    SmartDashboard.putData("Drive to 6", driveToAprilTag(drivebase, 6, Rotation2d.fromDegrees(180),
-    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+    // SmartDashboard.putData("Drive to 6", driveToAprilTag(drivebase, 6, Rotation2d.fromDegrees(180),
+    // Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
 
-    SmartDashboard.putData("Drive to 7", driveToAprilTag(drivebase, 7, Rotation2d.fromDegrees(180),
-    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+    // SmartDashboard.putData("Drive to 7", driveToAprilTag(drivebase, 7, Rotation2d.fromDegrees(180),
+    // Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
 
-    SmartDashboard.putData("Drive to 8", driveToAprilTag(drivebase, 8, Rotation2d.fromDegrees(180),
-    Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
+    // SmartDashboard.putData("Drive to 8", driveToAprilTag(drivebase, 8, Rotation2d.fromDegrees(180),
+    // Rotation2d.fromDegrees(180), new Translation2d((Constants.xOffset), 0)));
  
 
 
@@ -233,7 +236,7 @@ public class RobotContainer {
 
     // An example command will be run in autonomous
     return Commands.sequence(
-    reachout.withTimeout(2.25),
+    reachout.withTimeout(2.35),
     poopItOut.withTimeout(.5),
     stopPoopin.withTimeout(0),
     retractArmCommand.alongWith(Autos.exampleAuto(drivebase, AutoPath.getSelected()))
